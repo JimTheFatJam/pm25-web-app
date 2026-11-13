@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PM2.5 Prediction Dashboard</title>
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Top navigation bar -->
+  <header class="top-nav">
+    <img class="app-logo" src="icons/logo.png" alt="PM2.5 Prediction Dashboard logo">
+    <h1 class="app-title">PM2.5 Prediction Dashboard</h1>
+    <button class="how-to-use-btn" id="how-to-use-btn"><img class="btn-icon" src="icons/how_to_use.png" alt="">How to Use</button>
+    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode" aria-label="Toggle dark mode"><img id="theme-toggle-icon" src="icons/dark_mode.png" alt="Toggle dark mode"></button>
+  </header>
+
+  <!-- Main content: two-column split -->
+  <main class="main-content">
+
+    <!-- LEFT: AOI selection + map -->
+    <section class="aoi-panel">
+      <h2 class="section-title">Area of Interest (AOI) Selection</h2>
+
+      <div class="custom-selection-callout">
+        <img class="callout-icon" src="icons/draw_area.png" alt="">
+        <span><strong>Draw your Area of Interest</strong> &mdash; use the Draw Boundary tool to place a custom polygon directly on the map below.</span>
+      </div>
+
+      <div class="map-container">
+        <div id="map-leaflet"></div>
+
+        <div class="map-north-arrow">N<img class="arrow-glyph" src="icons/north_arrow.png" alt="North"></div>
+
+        <div class="map-toolbar">
+          <button class="tool-btn active" id="tool-select" title="Pan / Move Map">
+            <img class="tool-icon" src="icons/pan_move_map.png" alt=""><span class="tool-label">Pan / Move Map</span>
+          </button>
+          <button class="tool-btn" id="tool-area-summary" title="View Overall Trend" style="display:none;">
+            <img class="tool-icon" src="icons/info.png" alt=""><span class="tool-label">View Overall Trend</span>
+          </button>
+          <button class="tool-btn" id="tool-heatmap-mode" title="Toggle smooth heatmap" style="display:none;">
+            <img class="tool-icon" src="icons/info.png" alt=""><span class="tool-label" id="tool-heatmap-mode-label">Smooth Heatmap: Off</span>
+          </button>
+          <button class="tool-btn" id="tool-draw" title="Draw Boundary">
+            <img class="tool-icon" src="icons/draw_boundary.png" alt=""><span class="tool-label">Draw Boundary</span>
+          </button>
+          <button class="tool-btn" id="tool-clear" title="Clear Selection">
+            <img class="tool-icon" src="icons/clear_selection.png" alt=""><span class="tool-label">Clear Selection</span>
+          </button>
+        </div>
+
+        <div class="map-recenter-control">
+          <button id="zoom-recenter" title="Re-center on Philippines"><img class="btn-icon-only" src="icons/recenter.png" alt="Re-center"></button>
+        </div>
+
+        <div class="drawing-legend" id="drawing-legend" style="display:none;">
+          <span class="legend-swatch legend-first-point"></span> First point &mdash; click it again to close the polygon
+        </div>
+
+        <div class="map-status" id="map-status">Loading map...</div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Control panel -->
+    <aside class="control-panel">
+      <h2 class="section-title">Control Panel</h2>
+
+      <div class="info-box" id="geo-area-box">
+        <div class="info-box-title">Geographic Area Selected</div>
+        <div class="info-row"><span class="info-label">Region:</span> <span id="region-value">None selected</span></div>
+        <div class="info-row"><span class="info-label">Area:</span> <span id="area-value">&mdash;</span></div>
+        <div class="info-row" id="clip-warning-row" style="display:none;">
+          <span class="warning-text"><img class="inline-icon" src="icons/warning.png" alt="">Predictions are only available within the Philippine prediction domain.</span>
+        </div>
+      </div>
+
+      <div class="form-group checkbox-group cell-grid-toggle-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="cell-grid-toggle">
+          Show individual 1 km &times; 1 km cells
+        </label>
+        <span class="cell-grid-status" id="cell-grid-status">Off</span>
+      </div>
+
+      <div class="date-controls">
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="single-day-toggle" checked>
+            Single day only
+          </label>
+        </div>
+        <div class="date-pair-row">
+          <div class="form-group">
+            <label for="start-date">Start Date</label>
+            <div class="date-input-row">
+              <input type="date" id="start-date">
+            </div>
+          </div>
+          <div class="form-group" id="end-date-group">
+            <label for="end-date">End Date</label>
+            <div class="date-input-row">
+              <input type="date" id="end-date">
+            </div>
+          </div>
+        </div>
+        <div class="info-callout" id="date-info-callout">
+          <img class="callout-icon-small" src="icons/info.png" alt=""> Single-day mode: predictions will be generated for the selected date only.
+        </div>
+        <div id="date-error" class="validation-message error" style="display:none;"></div>
+        <div class="form-group">
+          <label for="resolution-select">Temporal Resolution</label>
+          <select id="resolution-select">
+            <option value="hourly">Hourly</option>
+            <option value="daily">Daily</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="resolution-lock">
+        <img class="lock-icon" src="icons/prediction_resolution_fixed.png" alt="">
+        <div>
+          <div class="resolution-lock-title">Prediction Resolution (Fixed)</div>
+          <div class="resolution-lock-value">1 km &times; 1 km <span class="lock-note">(This resolution cannot be changed)</span></div>
+        </div>
+      </div>
+
+      <div class="request-preview" id="request-preview" style="display:none;">
+        <div class="info-box-title">Prediction Request Preview</div>
+        <div class="info-row"><span class="info-label">Selected cells:</span> <span id="preview-cells"></span></div>
+        <div class="info-row"><span class="info-label">Estimated rows:</span> <span id="preview-rows"></span></div>
+        <div class="info-row"><span class="info-label">Backend status:</span> <span class="backend-status">Live (real-time GEE + Baseline + Group D model)</span></div>
+      </div>
+
+      <div id="validation-message" class="validation-message" style="display:none;"></div>
+
+      <button class="generate-btn" id="generate-btn">Generate PM2.5 Prediction Map</button>
+
+      <div id="prediction-progress" class="prediction-progress" style="display:none;">
+        <div class="prediction-progress-header">
+          <span class="prediction-progress-title">Generating Prediction</span>
+          <span class="prediction-progress-elapsed" id="prediction-elapsed">0s</span>
+        </div>
+        <div class="prediction-progress-stage" id="prediction-stage-label">Starting...</div>
+        <div class="prediction-progress-bar-track">
+          <div class="prediction-progress-bar-fill" id="prediction-progress-bar"></div>
+        </div>
+        <pre class="prediction-log-console" id="prediction-log-console"></pre>
+        <button class="cancel-prediction-btn" id="cancel-prediction-btn">Cancel Prediction</button>
+      </div>
+
+      <div id="prediction-result-banner" class="prediction-result-banner" style="display:none;"></div>
+
+      <div id="prediction-viz-controls" class="prediction-viz-controls" style="display:none;">
+        <div class="pm25-legend">
+          <div class="pm25-gradient-bar"></div>
+          <div class="pm25-gradient-ticks">
+            <span>0</span><span>12</span><span>35</span><span>55</span><span>150+ µg/m³</span>
+          </div>
+        </div>
+
+        <div class="form-group classification-group">
+          <label for="classification-select">Interpretation scheme</label>
+          <select id="classification-select">
+            <option value="">None — values only</option>
+          </select>
+        </div>
+        <div id="classification-legend" class="classification-legend" style="display:none;"></div>
+
+        <div id="inspection-panel" class="inspection-panel">
+          <div class="inspection-title">Cell Inspection</div>
+          <div id="inspection-idle" class="inspection-idle">Hover over a predicted 1 km cell (grid view) to inspect it at the current timestamp.</div>
+          <div id="inspection-body" style="display:none;">
+            <div class="inspection-value" id="inspection-value">—</div>
+            <div class="info-row"><span class="info-label">Timestamp:</span> <span id="inspection-timestamp"></span></div>
+            <div class="info-row"><span class="info-label">Cell:</span> <span id="inspection-cell"></span></div>
+            <div class="info-row"><span class="info-label">Centroid:</span> <span id="inspection-centroid"></span></div>
+            <div id="inspection-category-row" class="inspection-category-row" style="display:none;">
+              <div class="info-row"><span class="info-label">Category:</span> <strong id="inspection-category"></strong></div>
+              <div class="inspection-interpretation" id="inspection-interpretation"></div>
+              <div class="inspection-basis" id="inspection-basis"></div>
+            </div>
+          </div>
+        </div>
+        <div id="time-slider-row" class="time-slider-row" style="display:none;">
+          <button id="time-slider-play" class="time-slider-play-btn" title="Play/pause">▶</button>
+          <input type="range" id="time-slider" class="time-slider" min="0" max="0" step="1" value="0">
+          <span id="time-slider-label" class="time-slider-label">--</span>
+        </div>
+
+        <div class="export-row" id="export-row">
+          <span class="export-label">Download gridded predictions:</span>
+          <a id="export-csv-link" class="export-link" href="#" download>CSV</a>
+          <a id="export-geojson-link" class="export-link" href="#" download>GeoJSON</a>
+          <label class="export-frame-toggle" title="Export only the timestamp currently shown on the slider (one polygon per cell)">
+            <input type="checkbox" id="export-current-frame-only"> GeoJSON: current frame only
+          </label>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+</div>
+
+<!-- How to Use modal -->
+<div class="modal-overlay" id="how-to-use-overlay" style="display:none;">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="how-to-use-title">
+    <div class="modal-header">
+      <h3 id="how-to-use-title">How to Use</h3>
+      <button class="modal-close-btn" id="how-to-use-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="step">
+        <img class="step-icon" src="icons/step_draw.png" alt="">
+        <div class="step-text">
+          <div class="step-heading">1. Draw your area</div>
+          <div class="step-desc">Use the Draw Boundary tool to place a custom polygon on the map. Click the first point again to close the shape.</div>
+        </div>
+      </div>
+      <div class="step">
+        <img class="step-icon" src="icons/step_calendar.png" alt="">
+        <div class="step-text">
+          <div class="step-heading">2. Select date or date range</div>
+          <div class="step-desc">Choose a single date or a date range for the prediction.</div>
+        </div>
+      </div>
+      <div class="step">
+        <img class="step-icon" src="icons/step_generate.png" alt="">
+        <div class="step-text">
+          <div class="step-heading">3. Generate prediction map</div>
+          <div class="step-desc">Click the button to generate the PM2.5 prediction map.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="cell-detail-overlay" style="display:none;">
+  <div class="modal-box cell-detail-box" role="dialog" aria-modal="true" aria-labelledby="cell-detail-title">
+    <div class="modal-header">
+      <h3 id="cell-detail-title">Cell PM2.5 Prediction</h3>
+      <button class="modal-close-btn" id="cell-detail-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="cell-detail-coords" class="cell-detail-coords"></div>
+      <div class="cell-detail-tabs">
+        <button class="cell-detail-tab active" id="cell-detail-tab-timeline">Full Timeline</button>
+        <button class="cell-detail-tab" id="cell-detail-tab-hourly" style="display:none;">Hourly Average (00:00-23:00)</button>
+        <button class="cell-detail-tab" id="cell-detail-tab-explanation" style="display:none;">Model Explanation (SHAP)</button>
+      </div>
+      <div id="cell-detail-chart" class="pm25-chart-container"></div>
+      <div id="cell-detail-summary" class="cell-detail-summary"></div>
+      <div id="cell-detail-classification" class="cell-detail-classification" style="display:none;"></div>
+
+      <div id="cell-detail-explanation" class="cell-detail-explanation" style="display:none;">
+        <div class="explanation-controls">
+          <label for="explanation-hour-select">Explain the hourly prediction at</label>
+          <select id="explanation-hour-select"></select>
+        </div>
+        <div id="explanation-daily-note" class="explanation-note" style="display:none;"></div>
+        <div id="explanation-status" class="explanation-status"></div>
+        <div id="explanation-header" class="explanation-header"></div>
+        <div id="explanation-lists" class="explanation-lists"></div>
+        <div id="explanation-footer" class="explanation-note"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/leaflet.js"></script>
+<script src="map.js"></script>
+<script src="chart.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

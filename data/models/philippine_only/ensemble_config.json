@@ -1,0 +1,28 @@
+{
+  "models": {
+    "xgboost": "ph_only_xgboost.joblib",
+    "lightgbm": "ph_only_lightgbm.joblib",
+    "catboost": "ph_only_catboost.cbm"
+  },
+  "ensemble_weights": {
+    "xgboost": 0.3315907134093112,
+    "lightgbm": 0.33693748405962065,
+    "catboost": 0.3314718025310681
+  },
+  "weighting_method": "inverse_rmse_on_finetune_validation_set",
+  "training_strategy": "philippine_only_from_scratch_no_transfer",
+  "target_transform": "log1p",
+  "inverse_transform": "expm1_with_clip",
+  "log_clip_bounds": [
+    -8,
+    8
+  ],
+  "identifier_column": "grid_id",
+  "target_column": "pm25",
+  "random_seed": 42,
+  "source_script": "philippine_only_full_evaluation.py (Stage A)",
+  "frozen_holdout_RMSE": 10.213918442034876,
+  "frozen_holdout_R2": 0.4123453175685584,
+  "trained_utc": "2026-10-09T00:45:06+00:00",
+  "trained_utc_note": "Stage A artifact write time (UTC); philippine_only_full_evaluation.py prints its run start but does not record a training timestamp in a file."
+}

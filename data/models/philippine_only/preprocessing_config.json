@@ -1,0 +1,4 @@
+{
+  "landcover_encoding_scheme_file": "landcover_encoding_scheme.txt",
+  "note": "See landcover_encoding_scheme.txt (copied alongside this file if it was found) for the exact land-cover one-hot encoding scheme used when source_features.csv / philippines_features.csv were built by prepare_features.py."
+}

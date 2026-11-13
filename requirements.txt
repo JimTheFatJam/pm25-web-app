@@ -1,0 +1,43 @@
+# PM2.5 prediction web app -- runtime dependencies.
+#
+# Lower bounds are the versions this app is developed and tested against;
+# the deployed model artifacts were produced with xgboost 3.4 / lightgbm 4.7 /
+# catboost 1.2 and are loaded by unpickling, so those three in particular
+# should not be downgraded.
+#
+#   pip install -r requirements.txt
+
+# --- web ---
+flask>=3.1
+gunicorn>=23.0          # production WSGI server (see DEPLOYMENT.md); not used locally
+
+# --- geospatial ---
+geopandas>=1.1
+shapely>=2.1
+pyproj>=3.7
+rasterio>=1.4
+rasterstats>=0.21
+
+# --- scientific stack ---
+pandas>=2.2
+numpy>=1.26
+scipy>=1.14
+scikit-learn>=1.5       # LightGBM's sklearn wrapper + vendored research modules
+
+# --- models / explanations ---
+joblib>=1.4             # loads the XGBoost and LightGBM artifacts
+xgboost>=3.4
+lightgbm>=4.7
+catboost>=1.2
+shap>=0.46              # SHAP explanations only; predictions never depend on it
+
+# --- Earth Engine ---
+earthengine-api>=1.7
+
+# --- imported by the vendored research-pipeline modules ---
+holidays>=0.50          # calendar features
+matplotlib>=3.8         # imported at module level by one vendored module
+
+# Optional: only needed if a vendored code path resolves timezones by
+# coordinate. Not reached by the deployed prediction path.
+# timezonefinder>=6.5

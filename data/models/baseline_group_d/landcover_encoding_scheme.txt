@@ -1,0 +1,27 @@
+Land Cover One-Hot Encoding Scheme
+==================================
+
+A class is kept as its own column if it reaches 1.0% prevalence in EITHER file individually (not pooled across both).
+
+landcover_local:
+   2 (Evergreen_Broadleaf_Forest      ) SOURCE=0.40%                   -> other
+   4 (Deciduous_Broadleaf_Forest      ) SOURCE=0.13%                   -> other
+   8 (Woody_Savannas                  ) SOURCE=1.31%, PHILIPPINES=3.25% KEEP
+   9 (Savannas                        ) SOURCE=9.30%, PHILIPPINES=10.11% KEEP
+  10 (Grasslands                      ) SOURCE=2.74%                   KEEP
+  12 (Croplands                       ) SOURCE=9.16%, PHILIPPINES=1.55% KEEP
+  13 (Urban_and_Built_up              ) SOURCE=75.14%, PHILIPPINES=74.57% KEEP
+  14 (Cropland_Natural_Vegetation_Mosaic) SOURCE=1.36%, PHILIPPINES=0.44% KEEP
+  16 (Barren_or_Sparsely_Vegetated    ) SOURCE=0.11%                   -> other
+  17 (Water                           ) SOURCE=0.33%, PHILIPPINES=10.08% KEEP
+
+landcover_neighborhood_mode:
+   2 (Evergreen_Broadleaf_Forest      ) SOURCE=0.32%                   -> other
+   4 (Deciduous_Broadleaf_Forest      ) SOURCE=0.13%                   -> other
+   8 (Woody_Savannas                  ) SOURCE=2.33%, PHILIPPINES=2.11% KEEP
+   9 (Savannas                        ) SOURCE=5.91%, PHILIPPINES=6.43% KEEP
+  10 (Grasslands                      ) SOURCE=2.48%                   KEEP
+  12 (Croplands                       ) SOURCE=17.71%, PHILIPPINES=1.84% KEEP
+  13 (Urban_and_Built_up              ) SOURCE=69.39%, PHILIPPINES=80.01% KEEP
+  14 (Cropland_Natural_Vegetation_Mosaic) SOURCE=1.09%, PHILIPPINES=0.18% KEEP
+  17 (Water                           ) SOURCE=0.64%, PHILIPPINES=9.42% KEEP

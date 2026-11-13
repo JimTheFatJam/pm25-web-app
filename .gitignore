@@ -1,0 +1,51 @@
+# ---------------------------------------------------------------------------
+# Secrets and machine-local configuration -- NEVER commit these.
+# ---------------------------------------------------------------------------
+config/local_settings.py
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+service-account*.json
+**/credentials
+**/credentials.json
+client_secret*.json
+
+# ---------------------------------------------------------------------------
+# Large third-party datasets -- re-downloadable, see each folder's README.txt
+# (OSM extract ~80 MB, Natural Earth coastline ~8 MB, WorldPop ~12 MB)
+# ---------------------------------------------------------------------------
+data/local_datasets/
+
+# ---------------------------------------------------------------------------
+# Generated at setup time by build_full_grid.py (~88 MB) -- do not commit;
+# DEPLOYMENT.md has the one-line command that regenerates it on the server.
+# ---------------------------------------------------------------------------
+data/official_grid_ph_full.gpkg
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---------------------------------------------------------------------------
+# Tooling / runtime noise
+# ---------------------------------------------------------------------------
+catboost_info/
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,54 @@
+[Unit]
+Description=PM2.5 prediction web app (gunicorn)
+Documentation=https://github.com/JimTheFatJam/pm25-web-app
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pm25
+Group=pm25
+WorkingDirectory=/srv/pm25-web-app
+EnvironmentFile=/etc/pm25-web/pm25-web.env
+
+# ONE worker, by design. The job registry, the mobile (cell, T*) cache, the
+# SHAP feature store and the GEE availability state are all in-process
+# module-level state; with two workers a status poll could land on a worker
+# that never ran the job, and the caches would silently diverge. Concurrency
+# comes from threads instead -- the work is I/O-bound on Earth Engine.
+#
+# --timeout 300 covers the synchronous mobile endpoint on a cold cell
+# (measured 15-25 s, with headroom). The web prediction endpoint returns a
+# job id immediately and runs in a background thread, so it is unaffected.
+ExecStart=/srv/pm25-web-app/.venv/bin/gunicorn \
+    --workers 1 \
+    --threads 8 \
+    --timeout 300 \
+    --graceful-timeout 30 \
+    --bind 127.0.0.1:5050 \
+    --access-logfile - \
+    --error-logfile - \
+    backend.app:app
+
+Restart=on-failure
+RestartSec=5
+# Model load + GEE init takes ~40 s; don't let systemd consider that a hang.
+TimeoutStartSec=180
+
+# --- hardening ---
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictSUIDSGID=yes
+LockPersonality=yes
+# The app writes nothing except caches under its own tree.
+ReadWritePaths=/srv/pm25-web-app
+
+[Install]
+WantedBy=multi-user.target

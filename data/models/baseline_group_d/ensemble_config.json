@@ -1,0 +1,23 @@
+{
+  "models": {
+    "xgboost": "finetuned_xgboost_logspace.joblib",
+    "lightgbm": "finetuned_lightgbm_logspace.joblib",
+    "catboost": "finetuned_catboost_logspace.cbm"
+  },
+  "ensemble_weights": {
+    "xgboost": 0.3309424041492588,
+    "lightgbm": 0.3366287573929632,
+    "catboost": 0.3324288384577781
+  },
+  "weighting_method": "inverse_rmse_on_finetune_validation_set",
+  "target_transform": "log1p",
+  "inverse_transform": "expm1_with_clip",
+  "log_clip_bounds": [
+    -8,
+    8
+  ],
+  "identifier_column": "grid_id",
+  "target_column": "pm25",
+  "random_seed": 42,
+  "trained_utc": "2026-08-12T03:00:25.484442+00:00"
+}
