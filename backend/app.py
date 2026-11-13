@@ -59,10 +59,17 @@ app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 
 @app.after_request
 def _security_headers(response):
-    """Conservative headers for a public site. The frontend is entirely
-    first-party (Leaflet and D3 are vendored, no CDN, no inline eval), so a
-    strict CSP costs nothing. 'unsafe-inline' is kept for styles only
-    because the map layers set inline style attributes."""
+    """Conservative headers for a public site. Leaflet and D3 are vendored
+    (no CDN, no inline eval), so the CSP can be strict. Two deliberate
+    relaxations:
+
+      * img-src allows *.tile.openstreetmap.org, because map.js uses OSM
+        raster tiles for the basemap. Without it the map renders as a bare
+        vector outline with nothing underneath. Note this means a visitor's
+        browser contacts openstreetmap.org directly -- inherent to any
+        tile-based map, and the reason the attribution is shown.
+      * style-src allows 'unsafe-inline', because the map layers set inline
+        style attributes."""
     if not limits.PUBLIC_MODE:
         return response
     response.headers.setdefault("X-Content-Type-Options", "nosniff")
@@ -71,9 +78,10 @@ def _security_headers(response):
     response.headers.setdefault("Permissions-Policy", "geolocation=(), camera=(), microphone=()")
     response.headers.setdefault(
         "Content-Security-Policy",
-        "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; "
-        "script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; "
-        "form-action 'self'",
+        "default-src 'self'; "
+        "img-src 'self' data: blob: https://*.tile.openstreetmap.org; "
+        "style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; "
+        "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
     )
     return response
 

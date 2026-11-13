@@ -26,7 +26,7 @@ STAGES = [
     "Loading static predictors",
     "Retrieving dynamic GEE predictors",
     "Building feature matrix",
-    "Running Baseline + Group D inference",
+    "Running PM2.5 model inference",
     "Preparing prediction response",
 ]
 TOTAL_STAGES = len(STAGES)
