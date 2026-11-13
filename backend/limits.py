@@ -8,9 +8,9 @@ WHAT IS ACTUALLY AT RISK
 Not CPU. The expensive, rate-limited, *billable* resource is Google Earth
 Engine: one prediction job issues many reduceRegions calls against the
 project in config.settings.GEE_PROJECT_ID. An unthrottled public endpoint
-lets anyone burn that project's quota -- and the grid has ~62,000 cells, so
-a script walking it would mint a new (cell, T*) cache key every single time
-and never hit the mobile cache.
+lets anyone burn that project's quota -- and the full grid is 313,845 cells,
+so a script walking it would mint a new (cell, T*) cache key every single
+time and never hit the mobile cache.
 
 So the controls here are layered, cheapest first:
 

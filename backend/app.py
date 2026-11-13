@@ -14,6 +14,8 @@ selection/request_validator.py, grid/grid_provider.py) -- nothing
 reimplemented here.
 """
 
+import json
+import os
 import sys
 from pathlib import Path
 
@@ -142,16 +144,59 @@ import ee
 from config.settings import GEE_PROJECT_ID
 from backend.prediction.model_loader import load_models, ModelLoadError
 
-print("Initializing Google Earth Engine...")
-try:
+def _initialize_earth_engine():
+    """Authenticate to Earth Engine and return a short description of how.
+
+    Two paths, because a server has no browser to complete an interactive
+    OAuth flow:
+
+      * SERVER -- GOOGLE_APPLICATION_CREDENTIALS points at a service-account
+        JSON key. Note that ee.Initialize() does NOT read that variable: it
+        calls get_persistent_credentials(), which only looks for the file
+        `earthengine authenticate` writes, and fails with "Please authorize
+        access to your Earth Engine account". The key therefore has to be
+        turned into ServiceAccountCredentials explicitly, which is what this
+        does. (Confirmed against earthengine-api 1.7.x.)
+
+      * LOCAL -- no such variable, so fall back to those persistent
+        credentials, i.e. exactly how a developer machine has always worked.
+
+    The service account needs the Earth Engine API enabled on the project
+    plus an Earth Engine role; see DEPLOYMENT.md.
+    """
+    key_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
+    if key_path:
+        if not Path(key_path).is_file():
+            raise FileNotFoundError(
+                f"GOOGLE_APPLICATION_CREDENTIALS points at '{key_path}', which does not exist. "
+                f"Either fix the path or unset the variable to use interactive credentials.")
+        info = json.loads(Path(key_path).read_text())
+        email = info.get("client_email")
+        if not email:
+            raise ValueError(
+                f"'{key_path}' has no client_email field -- it does not look like a service-account "
+                f"key. Download a JSON key for the service account, not an OAuth client secret.")
+        credentials = ee.ServiceAccountCredentials(email, key_path)
+        if GEE_PROJECT_ID:
+            ee.Initialize(credentials, project=GEE_PROJECT_ID)
+        else:
+            ee.Initialize(credentials)
+        return f"service account {email}"
+
     if GEE_PROJECT_ID:
         ee.Initialize(project=GEE_PROJECT_ID)
     else:
         ee.Initialize()
-    print("  GEE initialized successfully.")
+    return "interactive credentials (earthengine authenticate)"
+
+
+print("Initializing Google Earth Engine...")
+try:
+    _how = _initialize_earth_engine()
+    print(f"  GEE initialized successfully via {_how}.")
 except Exception as e:
     print(f"  FAILED to initialize GEE: {type(e).__name__}: {e}")
-    print("  See the README's 'Earth Engine authentication' section. The backend will still start "
+    print("  See DEPLOYMENT.md's 'Earth Engine authentication' section. The backend will still start "
           "(so the rest of the app remains usable for area selection), but every prediction request "
           "will fail until this is fixed and the backend is restarted.")
 

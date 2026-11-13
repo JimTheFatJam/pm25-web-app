@@ -1,10 +1,19 @@
 # Deploying to https://pm25.dcism.org/
 
-Production setup for the public instance: Ubuntu/Debian VM with root, nginx +
-TLS in front, gunicorn running the Flask app as a systemd service.
+Two supported shapes:
 
-Everything below assumes the app lives at `/srv/pm25-web-app` and runs as the
-unprivileged user `pm25`.
+| | **A. Dedicated VM, root** | **B. Shared host, no root** |
+|---|---|---|
+| Web server | nginx + TLS you configure | Apache the department runs |
+| Process supervision | systemd unit | PM2 (or any user process manager) |
+| App location | `/srv/pm25-web-app` | `~/pm25-web-app` |
+| Entry point | `deploy/pm25-web.service` | `deploy/run_gunicorn.sh` |
+
+**pm25.dcism.org runs shape B.** Sections 1 and 2 (secrets, abuse protection)
+apply to both; section 3 covers A and section 3b covers B.
+
+Everything in section 3 assumes the app lives at `/srv/pm25-web-app` and runs
+as the unprivileged user `pm25`.
 
 ---
 
@@ -32,18 +41,23 @@ service, and it authenticates with Google credentials rather than a key string.
 Interactive `earthengine authenticate` is not suitable for a server. Use a
 service account instead:
 
-1. In Google Cloud, create a service account in the same project and download
-   a JSON key.
-2. Register it with Earth Engine at
+1. In Google Cloud, create a service account in the same project (e.g.
+   `pm25-web-server@<project>.iam.gserviceaccount.com`).
+2. Grant it **Earth Engine Resource Writer** and **Service Usage Consumer**.
+   Not Owner, not Editor.
+3. Create a JSON key and register the address at
    <https://signup.earthengine.google.com/#!/service_accounts>.
-3. Install it and lock it down:
+4. Put it somewhere outside the repository, readable only by the service
+   user — `chmod 600`, in a `chmod 700` directory — and point
+   `GOOGLE_APPLICATION_CREDENTIALS` at it.
 
-```bash
-sudo install -D -o pm25 -g pm25 -m 600 gee-service-account.json /etc/pm25-web/gee-service-account.json
-```
-
-`ee.Initialize()` picks it up as Application Default Credentials via
-`GOOGLE_APPLICATION_CREDENTIALS` — no code change needed.
+> Note: `ee.Initialize()` does **not** read `GOOGLE_APPLICATION_CREDENTIALS`.
+> It calls `get_persistent_credentials()`, which only looks for the file
+> `earthengine authenticate` writes, and otherwise fails with *"Please
+> authorize access to your Earth Engine account"*. `backend/app.py` therefore
+> reads the variable itself and builds `ee.ServiceAccountCredentials`
+> explicitly. Unset the variable and it falls back to interactive
+> credentials, which is how a developer machine works.
 
 ---
 
@@ -52,9 +66,9 @@ sudo install -D -o pm25 -g pm25 -m 600 gee-service-account.json /etc/pm25-web/ge
 ### What is actually at risk
 
 Not CPU — **Earth Engine quota**, which is attached to a billable Google Cloud
-project. One prediction job issues many `reduceRegions` calls. The grid has
-~62,000 cells, so a script walking it would mint a fresh `(cell, T*)` cache key
-every time and never hit a cache. That is the attack to stop.
+project. One prediction job issues many `reduceRegions` calls. The full grid
+is 313,845 cells, so a script walking it would mint a fresh `(cell, T*)` cache
+key every time and never hit a cache. That is the attack to stop.
 
 ### Layers, cheapest first
 
@@ -160,6 +174,74 @@ curl -s https://pm25.dcism.org/api/health | python3 -m json.tool
 
 `model_loaded: true` and `availability_status: "ready"` means it is serving.
 The availability check runs in the background and takes ~30 s after a restart.
+
+---
+
+## 3b. Shared host without root (how pm25.dcism.org runs)
+
+No `sudo`, Apache already serving `~/<domain>/` as a document root, and
+`mod_proxy` + `mod_rewrite` enabled. The app runs as your own user on a high
+port and Apache reverse-proxies to it from a `.htaccess` you control.
+
+### Install
+
+```bash
+git clone https://github.com/JimTheFatJam/pm25-web-app.git ~/pm25-web-app
+cd ~/pm25-web-app && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/python build_full_grid.py          # generates the 88 MB grid, ~40 s
+```
+
+### Secrets, outside the repository
+
+```bash
+mkdir -p ~/pm25-secrets && chmod 700 ~/pm25-secrets
+```
+
+Put the Earth Engine service-account key at
+`~/pm25-secrets/gee-service-account.json` (`chmod 600`), then create
+`~/pm25-secrets/pm25-web.env` from `deploy/pm25-web.env.example`, with
+`HOME` left alone and the credentials path pointing into `~/pm25-secrets/`.
+
+### Run it
+
+`deploy/run_gunicorn.sh` loads that env file and execs gunicorn with a single
+worker. Under PM2:
+
+```bash
+cd ~/pm25-web-app && pm2 start deploy/run_gunicorn.sh --name pm25 --interpreter bash && pm2 save
+```
+
+`PM25_PORT` (default 20451) picks the port; it binds to 127.0.0.1 only, so the
+app is never reachable except through Apache.
+
+### Expose it
+
+In the document root — **not** the app directory:
+
+```apache
+RewriteEngine On
+RewriteRule ^(.*)$ http://127.0.0.1:20451/$1 [P,L]
+```
+
+Confirm with `curl -sS https://<domain>/api/health`.
+
+### Surviving a reboot
+
+`pm2 startup` needs root. Without it, use cron:
+
+```bash
+(crontab -l 2>/dev/null; echo "@reboot sleep 30 && $HOME/.local/bin/pm2 resurrect") | crontab -
+```
+
+`pm2 save` records the current process list; `pm2 resurrect` restores it.
+
+### Updating
+
+`deploy/deploy.sh` assumes systemd. On a shared host:
+
+```bash
+cd ~/pm25-web-app && git pull --ff-only && .venv/bin/pip install -q -r requirements.txt && pm2 restart pm25 && sleep 45 && curl -sS http://127.0.0.1:20451/api/health
+```
 
 ---
 
