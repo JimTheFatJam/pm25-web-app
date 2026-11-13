@@ -116,6 +116,8 @@ const PM25Map = (() => {
 
     L.control.scale({ position: "bottomleft", imperial: false }).addTo(map);
 
+    observeContainerSize(document.getElementById(mapDivId));
+
     boundaryLayer = L.geoJSON(boundaryData, {
       style: { color: "#1f2937", weight: 1.5, fillOpacity: 0, dashArray: "4,3" },
       interactive: false, // BUG FIX: an invisible fill (fillOpacity: 0) is still interactive by
@@ -648,6 +650,26 @@ const PM25Map = (() => {
 
   function zoomBy(delta) { map.setZoom(map.getZoom() + delta); }
   function recenter() { map.fitBounds(L.geoJSON(boundaryData).getBounds()); }
+
+  // Leaflet caches its container's pixel size and does not watch for
+  // changes, so after a window resize or a phone rotating to landscape it
+  // keeps drawing at the old size -- grey gutters, tiles in the wrong
+  // place, clicks landing off-target. The responsive layout changes the
+  // map's height at two breakpoints, so this matters here. Debounced
+  // because a drag-resize fires continuously, and guarded so it is a
+  // no-op until the map exists.
+  function observeContainerSize(el) {
+    let pending = null;
+    const remeasure = () => {
+      clearTimeout(pending);
+      pending = setTimeout(() => { if (map) map.invalidateSize(); }, 120);
+    };
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(remeasure).observe(el);
+    }
+    window.addEventListener("resize", remeasure);
+    window.addEventListener("orientationchange", remeasure);
+  }
 
   return {
     init, setMode, clearSelection, drawSelection, drawSelectedCellGrid, clearSelectedCellGrid,

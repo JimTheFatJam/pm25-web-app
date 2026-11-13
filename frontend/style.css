@@ -475,6 +475,57 @@ body {
 }
 .cell-detail-summary strong { color: var(--text); font-variant-numeric: tabular-nums; }
 
+/* ---------------- Responsive: narrow / portrait ----------------
+   The desktop layout deliberately pins the whole app to one viewport
+   (body and .app-shell are height:100vh, overflow:hidden) so the map
+   fills the screen and nothing scrolls. That assumption breaks the
+   moment the two columns stack: the map panel and the control panel
+   then have to share a single viewport height, the map collapses to a
+   sliver, and because the page cannot scroll there is no way to reach
+   it. On a phone or tablet held upright the map was effectively
+   invisible.
+
+   Below the breakpoint the app therefore becomes an ordinary scrolling
+   page, and the map gets an explicit height instead of whatever is left
+   over. Leaflet is told to re-measure on resize (see map.js), since it
+   caches container size and would otherwise render grey gutters after
+   an orientation change. */
 @media (max-width: 1100px) {
-  .main-content { grid-template-columns: 1fr; }
+  html, body { height: auto; }
+  body { overflow: auto; -webkit-text-size-adjust: 100%; }
+
+  .app-shell { height: auto; min-height: 100vh; overflow: visible; }
+
+  .main-content {
+    grid-template-columns: 1fr;
+    overflow: visible;
+    padding: 14px 16px;
+  }
+
+  /* Panels size to their content and let the PAGE scroll, rather than
+     each becoming its own little scroll region inside a fixed height. */
+  .aoi-panel { overflow: visible; }
+  .control-panel { overflow-y: visible; max-height: none; }
+
+  /* The map needs a real height of its own once it is no longer
+     filling leftover flex space. 60vh keeps it the dominant element
+     while leaving the controls reachable by scrolling; the min-height
+     stops it collapsing on short landscape phones. */
+  .map-container { height: 60vh; min-height: 340px; }
+}
+
+/* Phones. Slightly more map, tighter chrome. */
+@media (max-width: 680px) {
+  .main-content { padding: 12px; gap: 12px; }
+  .aoi-panel { padding: 12px; }
+  .map-container { height: 64vh; min-height: 320px; }
+  .top-nav { padding: 10px 12px; }
+  .app-title { font-size: 16px; }
+  .date-pair-row { grid-template-columns: 1fr; }
+}
+
+/* Landscape on a short screen: 60vh of map leaves almost nothing for
+   the controls, so cap it in absolute terms instead. */
+@media (max-width: 1100px) and (max-height: 560px) {
+  .map-container { height: 78vh; min-height: 260px; }
 }

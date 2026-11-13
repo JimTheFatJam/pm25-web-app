@@ -2,6 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Without this a phone renders the page into a 980px virtual viewport and
+     zooms out, so the CSS breakpoints never match the real screen width and
+     the layout is unreadable regardless of what the media queries say. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
 <title>PM2.5 Prediction Dashboard</title>
 <link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="style.css">
