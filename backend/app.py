@@ -63,15 +63,16 @@ def _security_headers(response):
     (no CDN, no inline eval), so the CSP can be strict. Two deliberate
     relaxations:
 
-      * img-src allows the basemap tile host (*.basemaps.cartocdn.com),
+      * img-src allows the basemap tile host (server.arcgisonline.com),
         because map.js renders raster tiles under the PM2.5 overlay.
         Without it the map is a bare vector outline. This does mean a
         visitor's browser contacts the tile provider directly -- inherent
         to any tile-based map, and the reason attribution is shown.
-        tile.openstreetmap.org is kept allowed so switching BASEMAP_URL
-        back does not silently break; OSM's own servers are donated
-        infrastructure whose usage policy does not cover hotlinking from a
-        public site, which is why they are not the default.
+        tile.openstreetmap.org stays allowed so switching BASEMAP_URL back
+        for local work does not silently break; OSM's own servers are
+        donated infrastructure whose usage policy does not cover hotlinking
+        from a public site, which is why they are not the default. See
+        frontend/map.js for the providers tried and rejected.
       * style-src allows 'unsafe-inline', because the map layers set inline
         style attributes."""
     if not limits.PUBLIC_MODE:
@@ -83,7 +84,7 @@ def _security_headers(response):
     response.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'self'; "
-        "img-src 'self' data: blob: https://*.basemaps.cartocdn.com "
+        "img-src 'self' data: blob: https://server.arcgisonline.com "
         "https://*.tile.openstreetmap.org; "
         "style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; "
         "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",

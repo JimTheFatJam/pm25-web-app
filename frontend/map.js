@@ -1,6 +1,6 @@
 /**
  * map.js -- Leaflet-based map of the Philippines with a raster basemap
- * (CARTO Positron; the underlying data is OpenStreetMap's).
+ * (Esri World Light Gray Base; see BASEMAP_URL for why).
  *
  * Architecture note: this replaces an earlier custom D3 SVG vector map
  * that was deliberately tile-free. Per explicit request to restore
@@ -27,10 +27,28 @@
  */
 
 const PM25Map = (() => {
-  // Basemap tiles. Swap this one line to change provider -- the PM2.5
-  // overlay, the Philippine boundary and the grid rendering are all
-  // independent of it and keep working if tiles fail to load.
-  const BASEMAP_URL = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  // Basemap tiles. One constant -- the PM2.5 overlay, the Philippine
+  // boundary and the grid rendering are all independent of it and keep
+  // working if tiles fail to load, so a bad provider degrades the map to a
+  // usable outline rather than breaking it.
+  //
+  // Two providers were tried and rejected, both of which return HTTP 200
+  // with a *picture* saying no, so only looking at the pixels catches it:
+  //   tile.openstreetmap.org  -- donated infrastructure; its usage policy
+  //                              does not cover hotlinking from a public
+  //                              site, and flagged clients get an
+  //                              "Access blocked" tile.
+  //   basemaps.cartocdn.com   -- now serves "API KEY REQUIRED" watermarks.
+  //
+  // Esri's World Light Gray Base needs no key, is unwatermarked, and its
+  // muted palette deliberately stays out of the way of the PM2.5 colours.
+  // It is tiled to zoom 16; maxNativeZoom lets Leaflet upscale past that
+  // rather than request tiles that do not exist (zoom 16 is ~2.4 m/px,
+  // already far finer than the 1 km grid).
+  const BASEMAP_URL =
+    "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+  const BASEMAP_ATTRIBUTION = "Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors";
+  const BASEMAP_MAX_NATIVE_ZOOM = 16;
 
   let map, boundaryLayer, selectionLayer, drawingLayer, cellsLayer, predictionLayer;
   let boundaryData = null;
@@ -90,24 +108,10 @@ const PM25Map = (() => {
     });
     map.fitBounds(bounds);
 
-    // Basemap: CARTO Positron, not tile.openstreetmap.org.
-    //
-    // OSM's tile servers are donated infrastructure and their usage policy
-    // does not cover a public site hotlinking them; in practice OSM returns
-    // an "Access blocked -- app is not following the tile usage policy"
-    // image to clients it has flagged, which is what visitors on some
-    // networks were seeing. CARTO's basemaps are keyless (nothing secret in
-    // the frontend) and their light style stays out of the way of the PM2.5
-    // overlay, which matters more here than cartographic detail. The data is
-    // still OpenStreetMap's, hence both attributions.
-    //
-    // If tiles fail to load for any reason the map still works: the
-    // Philippine boundary below is a vendored vector layer, independent of
-    // any tile server.
     L.tileLayer(BASEMAP_URL, {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-      subdomains: "abcd",
+      attribution: BASEMAP_ATTRIBUTION,
       maxZoom: 19,
+      maxNativeZoom: BASEMAP_MAX_NATIVE_ZOOM,
     }).addTo(map);
 
     L.control.scale({ position: "bottomleft", imperial: false }).addTo(map);
