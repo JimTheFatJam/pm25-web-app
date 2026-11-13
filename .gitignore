@@ -16,10 +16,18 @@ service-account*.json
 client_secret*.json
 
 # ---------------------------------------------------------------------------
-# Large third-party datasets -- re-downloadable, see each folder's README.txt
-# (OSM extract ~80 MB, Natural Earth coastline ~8 MB, WorldPop ~12 MB)
+# The OSM extract (~77 MB) is BUILD-TIME only: road density is precomputed
+# into data/static_layers/road_density_by_cell.csv, which IS committed, so a
+# deployment never reads the .pbf. See data/local_datasets/osm/README.txt to
+# re-download it if you need to rebuild that cache.
+#
+# The WorldPop rasters and the Natural Earth coastline are NOT excluded --
+# static_predictors.py reads them on every prediction (population and
+# distance-to-coast are model features), so a deployment that lacks them
+# fails at request time with StaticPredictorError. Both are redistributable:
+# WorldPop is CC-BY 4.0, Natural Earth is public domain.
 # ---------------------------------------------------------------------------
-data/local_datasets/
+data/local_datasets/osm/
 
 # ---------------------------------------------------------------------------
 # Generated at setup time by build_full_grid.py (~88 MB) -- do not commit;

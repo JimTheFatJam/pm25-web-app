@@ -140,11 +140,16 @@ Two things are excluded from git because they are large and reproducible:
 sudo -u pm25 /srv/pm25-web-app/.venv/bin/python /srv/pm25-web-app/build_full_grid.py
 ```
 
-**Third-party datasets (~99 MB)** — only needed to *rebuild* static layers, not
-to serve predictions. `data/static_layers/road_density_by_cell.csv` is committed,
-so a normal deployment does not need them. If you do need them, each folder's
-`README.txt` names the exact file and source (OSM extract, Natural Earth
-coastline, WorldPop).
+**Third-party datasets.** The WorldPop rasters and the Natural Earth coastline
+**are committed** (~19 MB): `static_predictors.py` reads them on *every*
+prediction, because population and distance-to-coast are model features. A
+deployment without them starts fine and then fails each request with
+`StaticPredictorError`.
+
+Only the OSM extract (~77 MB) is excluded, and it is genuinely build-time:
+road density is precomputed into `data/static_layers/road_density_by_cell.csv`,
+which is committed. You need the `.pbf` only to rebuild that cache — see
+`data/local_datasets/osm/README.txt`.
 
 ### Config, service, TLS
 
