@@ -12,10 +12,10 @@
 
   <!-- Top navigation bar -->
   <header class="top-nav">
-    <img class="app-logo" src="icons/logo.png" alt="PM2.5 Prediction Dashboard logo">
+    <img class="app-logo" src="ui-icons/logo.png" alt="PM2.5 Prediction Dashboard logo">
     <h1 class="app-title">PM2.5 Prediction Dashboard</h1>
-    <button class="how-to-use-btn" id="how-to-use-btn"><img class="btn-icon" src="icons/how_to_use.png" alt="">How to Use</button>
-    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode" aria-label="Toggle dark mode"><img id="theme-toggle-icon" src="icons/dark_mode.png" alt="Toggle dark mode"></button>
+    <button class="how-to-use-btn" id="how-to-use-btn"><img class="btn-icon" src="ui-icons/how_to_use.png" alt="">How to Use</button>
+    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Toggle dark mode" aria-label="Toggle dark mode"><img id="theme-toggle-icon" src="ui-icons/dark_mode.png" alt="Toggle dark mode"></button>
   </header>
 
   <!-- Main content: two-column split -->
@@ -26,35 +26,35 @@
       <h2 class="section-title">Area of Interest (AOI) Selection</h2>
 
       <div class="custom-selection-callout">
-        <img class="callout-icon" src="icons/draw_area.png" alt="">
+        <img class="callout-icon" src="ui-icons/draw_area.png" alt="">
         <span><strong>Draw your Area of Interest</strong> &mdash; use the Draw Boundary tool to place a custom polygon directly on the map below.</span>
       </div>
 
       <div class="map-container">
         <div id="map-leaflet"></div>
 
-        <div class="map-north-arrow">N<img class="arrow-glyph" src="icons/north_arrow.png" alt="North"></div>
+        <div class="map-north-arrow">N<img class="arrow-glyph" src="ui-icons/north_arrow.png" alt="North"></div>
 
         <div class="map-toolbar">
           <button class="tool-btn active" id="tool-select" title="Pan / Move Map">
-            <img class="tool-icon" src="icons/pan_move_map.png" alt=""><span class="tool-label">Pan / Move Map</span>
+            <img class="tool-icon" src="ui-icons/pan_move_map.png" alt=""><span class="tool-label">Pan / Move Map</span>
           </button>
           <button class="tool-btn" id="tool-area-summary" title="View Overall Trend" style="display:none;">
-            <img class="tool-icon" src="icons/info.png" alt=""><span class="tool-label">View Overall Trend</span>
+            <img class="tool-icon" src="ui-icons/info.png" alt=""><span class="tool-label">View Overall Trend</span>
           </button>
           <button class="tool-btn" id="tool-heatmap-mode" title="Toggle smooth heatmap" style="display:none;">
-            <img class="tool-icon" src="icons/info.png" alt=""><span class="tool-label" id="tool-heatmap-mode-label">Smooth Heatmap: Off</span>
+            <img class="tool-icon" src="ui-icons/info.png" alt=""><span class="tool-label" id="tool-heatmap-mode-label">Smooth Heatmap: Off</span>
           </button>
           <button class="tool-btn" id="tool-draw" title="Draw Boundary">
-            <img class="tool-icon" src="icons/draw_boundary.png" alt=""><span class="tool-label">Draw Boundary</span>
+            <img class="tool-icon" src="ui-icons/draw_boundary.png" alt=""><span class="tool-label">Draw Boundary</span>
           </button>
           <button class="tool-btn" id="tool-clear" title="Clear Selection">
-            <img class="tool-icon" src="icons/clear_selection.png" alt=""><span class="tool-label">Clear Selection</span>
+            <img class="tool-icon" src="ui-icons/clear_selection.png" alt=""><span class="tool-label">Clear Selection</span>
           </button>
         </div>
 
         <div class="map-recenter-control">
-          <button id="zoom-recenter" title="Re-center on Philippines"><img class="btn-icon-only" src="icons/recenter.png" alt="Re-center"></button>
+          <button id="zoom-recenter" title="Re-center on Philippines"><img class="btn-icon-only" src="ui-icons/recenter.png" alt="Re-center"></button>
         </div>
 
         <div class="drawing-legend" id="drawing-legend" style="display:none;">
@@ -74,7 +74,7 @@
         <div class="info-row"><span class="info-label">Region:</span> <span id="region-value">None selected</span></div>
         <div class="info-row"><span class="info-label">Area:</span> <span id="area-value">&mdash;</span></div>
         <div class="info-row" id="clip-warning-row" style="display:none;">
-          <span class="warning-text"><img class="inline-icon" src="icons/warning.png" alt="">Predictions are only available within the Philippine prediction domain.</span>
+          <span class="warning-text"><img class="inline-icon" src="ui-icons/warning.png" alt="">Predictions are only available within the Philippine prediction domain.</span>
         </div>
       </div>
 
@@ -108,7 +108,7 @@
           </div>
         </div>
         <div class="info-callout" id="date-info-callout">
-          <img class="callout-icon-small" src="icons/info.png" alt=""> Single-day mode: predictions will be generated for the selected date only.
+          <img class="callout-icon-small" src="ui-icons/info.png" alt=""> Single-day mode: predictions will be generated for the selected date only.
         </div>
         <div id="date-error" class="validation-message error" style="display:none;"></div>
         <div class="form-group">
@@ -121,7 +121,7 @@
       </div>
 
       <div class="resolution-lock">
-        <img class="lock-icon" src="icons/prediction_resolution_fixed.png" alt="">
+        <img class="lock-icon" src="ui-icons/prediction_resolution_fixed.png" alt="">
         <div>
           <div class="resolution-lock-title">Prediction Resolution (Fixed)</div>
           <div class="resolution-lock-value">1 km &times; 1 km <span class="lock-note">(This resolution cannot be changed)</span></div>
@@ -215,21 +215,21 @@
     </div>
     <div class="modal-body">
       <div class="step">
-        <img class="step-icon" src="icons/step_draw.png" alt="">
+        <img class="step-icon" src="ui-icons/step_draw.png" alt="">
         <div class="step-text">
           <div class="step-heading">1. Draw your area</div>
           <div class="step-desc">Use the Draw Boundary tool to place a custom polygon on the map. Click the first point again to close the shape.</div>
         </div>
       </div>
       <div class="step">
-        <img class="step-icon" src="icons/step_calendar.png" alt="">
+        <img class="step-icon" src="ui-icons/step_calendar.png" alt="">
         <div class="step-text">
           <div class="step-heading">2. Select date or date range</div>
           <div class="step-desc">Choose a single date or a date range for the prediction.</div>
         </div>
       </div>
       <div class="step">
-        <img class="step-icon" src="icons/step_generate.png" alt="">
+        <img class="step-icon" src="ui-icons/step_generate.png" alt="">
         <div class="step-text">
           <div class="step-heading">3. Generate prediction map</div>
           <div class="step-desc">Click the button to generate the PM2.5 prediction map.</div>

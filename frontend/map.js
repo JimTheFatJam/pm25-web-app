@@ -1,6 +1,6 @@
 /**
- * map.js -- Leaflet-based map of the Philippines with an OpenStreetMap
- * basemap.
+ * map.js -- Leaflet-based map of the Philippines with a raster basemap
+ * (CARTO Positron; the underlying data is OpenStreetMap's).
  *
  * Architecture note: this replaces an earlier custom D3 SVG vector map
  * that was deliberately tile-free. Per explicit request to restore
@@ -27,6 +27,11 @@
  */
 
 const PM25Map = (() => {
+  // Basemap tiles. Swap this one line to change provider -- the PM2.5
+  // overlay, the Philippine boundary and the grid rendering are all
+  // independent of it and keep working if tiles fail to load.
+  const BASEMAP_URL = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+
   let map, boundaryLayer, selectionLayer, drawingLayer, cellsLayer, predictionLayer;
   let boundaryData = null;
   let currentMode = "select"; // "select" (pan) | "draw"
@@ -85,8 +90,23 @@ const PM25Map = (() => {
     });
     map.fitBounds(bounds);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; OpenStreetMap contributors',
+    // Basemap: CARTO Positron, not tile.openstreetmap.org.
+    //
+    // OSM's tile servers are donated infrastructure and their usage policy
+    // does not cover a public site hotlinking them; in practice OSM returns
+    // an "Access blocked -- app is not following the tile usage policy"
+    // image to clients it has flagged, which is what visitors on some
+    // networks were seeing. CARTO's basemaps are keyless (nothing secret in
+    // the frontend) and their light style stays out of the way of the PM2.5
+    // overlay, which matters more here than cartographic detail. The data is
+    // still OpenStreetMap's, hence both attributions.
+    //
+    // If tiles fail to load for any reason the map still works: the
+    // Philippine boundary below is a vendored vector layer, independent of
+    // any tile server.
+    L.tileLayer(BASEMAP_URL, {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: "abcd",
       maxZoom: 19,
     }).addTo(map);
 

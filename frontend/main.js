@@ -289,7 +289,7 @@ function applyTheme(theme) {
   // Icon shows the mode a click will SWITCH TO (matching the previous
   // emoji-based behavior exactly): light_mode.png while in dark mode
   // (click to go light), dark_mode.png while in light mode (click to go dark).
-  el("theme-toggle-icon").src = theme === "dark" ? "icons/light_mode.png" : "icons/dark_mode.png";
+  el("theme-toggle-icon").src = theme === "dark" ? "ui-icons/light_mode.png" : "ui-icons/dark_mode.png";
   el("theme-toggle-icon").alt = theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
   // Readable category text colours depend on the theme's panel colour --
   // re-render any category text currently shown (never true during
